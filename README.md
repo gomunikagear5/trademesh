@@ -14,20 +14,35 @@ tm.trade(ticker="IBIT", direction="bearish", amount=50)
 
 # Or target specific venues
 tm.trade(ticker="NVDA", side="put", strike=800, exp="2026-04-17", venue="robinhood")
-tm.trade(ticker="BTC", side="short", amount=100, venue="hyperliquid")
+tm.trade(ticker="BTC", direction="bullish", amount=100, venue="coinbase")
+tm.trade(ticker="FED", direction="bearish", amount=25, venue="kalshi")
 tm.trade(market_id="abc123", side="no", amount=25, venue="simmer")
+```
+
+## ⚡ Quick Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/gomunikagear5/trademesh/main/install.sh | bash
+```
+
+Or with pip:
+
+```bash
+pip install git+https://github.com/gomunikagear5/trademesh.git
 ```
 
 ## Supported Venues
 
 | Venue | Type | Status |
 |-------|------|--------|
+| Robinhood | Stocks + Options | ✅ Live |
+| Kalshi | Regulated event contracts | ✅ Live |
+| Coinbase | Crypto spot | ✅ Live |
 | Simmer (Polymarket) | Prediction markets | ✅ Live |
-| Robinhood | Stocks + Options | 🔧 Building |
-| Alpaca | Stocks + Options (paper/live) | 🔧 Building |
+| Alpaca | Stocks + Options (paper/live) | ✅ Live |
 | Hyperliquid | Crypto perps | 📋 Planned |
-| Kalshi | Regulated event contracts | 📋 Planned |
-| Coinbase | Crypto spot | 📋 Planned |
+| Interactive Brokers | Stocks/Options/Futures | 📋 Planned |
+| dYdX | Decentralized crypto perps | 📋 Planned |
 | Binance | Crypto spot + futures | 📋 Planned |
 
 ## Why TradeMesh?
@@ -40,25 +55,71 @@ tm.trade(market_id="abc123", side="no", amount=25, venue="simmer")
 
 ## Quick Start
 
+```python
+from trademesh import TradeMesh
+from trademesh.adapters import RobinhoodAdapter, KalshiAdapter, CoinbaseAdapter
+
+tm = TradeMesh()
+tm.register(RobinhoodAdapter())   # uses ROBINHOOD_USERNAME / ROBINHOOD_PASSWORD
+tm.register(KalshiAdapter())      # uses KALSHI_API_KEY / KALSHI_PRIVATE_KEY_PATH
+tm.register(CoinbaseAdapter())    # uses COINBASE_API_KEY_NAME / COINBASE_PRIVATE_KEY
+
+# Check what's available
+tm.venues()  # ['robinhood', 'kalshi', 'coinbase']
+
+# Trade — TradeMesh auto-routes to the best adapter
+tm.trade(ticker="TSLA", direction="bearish", amount=200)  # → Robinhood
+tm.trade(ticker="BTC",  direction="bullish", amount=100)  # → Coinbase
+tm.trade(ticker="FED",  direction="bearish", amount=25)   # → Kalshi
+```
+
+## Adapter Setup
+
+### 🟢 Robinhood (Stocks + Options)
+
 ```bash
-pip install trademesh
+export ROBINHOOD_USERNAME="your@email.com"
+export ROBINHOOD_PASSWORD="yourpassword"
 ```
 
 ```python
-from trademesh import TradeMesh
-from trademesh.adapters import SimmerAdapter, RobinhoodAdapter
+from trademesh.adapters import RobinhoodAdapter
+adapter = RobinhoodAdapter()
+# Or: RobinhoodAdapter(username="...", password="...")
+```
 
-tm = TradeMesh()
-tm.register(SimmerAdapter(api_key="your-simmer-key"))
-tm.register(RobinhoodAdapter())  # uses stored credentials
+### 🔵 Kalshi (Regulated Event Markets)
 
-# Check what's available
-tm.venues()  # ['simmer', 'robinhood']
+```bash
+export KALSHI_API_KEY="your-api-key-id"
+export KALSHI_PRIVATE_KEY_PATH="/path/to/private.pem"
+# Or: export KALSHI_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
+```
 
-# Trade
-result = tm.trade(ticker="IBIT", direction="bearish", amount=50, venue="auto")
-print(result)
-# TradeResult(venue='simmer', market='Bitcoin Up or Down', side='no', amount=50, status='filled')
+```python
+from trademesh.adapters import KalshiAdapter
+adapter = KalshiAdapter()
+# Use demo=True for Kalshi's sandbox environment
+```
+
+### 🟠 Coinbase (Crypto Spot)
+
+```bash
+export COINBASE_API_KEY_NAME="organizations/{org_id}/apiKeys/{key_id}"
+export COINBASE_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n..."
+```
+
+```python
+from trademesh.adapters import CoinbaseAdapter
+adapter = CoinbaseAdapter()
+# Supports BTC, ETH, SOL, XRP, DOGE, ADA, and more
+```
+
+### 🟣 Simmer / Polymarket
+
+```python
+from trademesh.adapters import SimmerAdapter
+adapter = SimmerAdapter(api_key="your-simmer-key")
 ```
 
 ## Architecture
@@ -72,11 +133,12 @@ TradeMesh
 │   └── Performance Logger — feeds backtest + optimization
 └── Adapters (pluggable)
     ├── BaseAdapter        — interface all venues implement
+    ├── RobinhoodAdapter   ✅
+    ├── KalshiAdapter      ✅
+    ├── CoinbaseAdapter    ✅
     ├── SimmerAdapter      ✅
-    ├── RobinhoodAdapter   🔧
-    ├── AlpacaAdapter      🔧
-    ├── HyperliquidAdapter 📋
-    └── KalshiAdapter      📋
+    ├── AlpacaAdapter      ✅
+    └── HyperliquidAdapter 📋
 ```
 
 ## Contributing
