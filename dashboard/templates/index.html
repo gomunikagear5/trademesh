@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradeMesh 🔌</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --card:      #1e2130;
+      --card2:     #252a3a;
+      --border:    #2e3450;
+      --text:      #e2e8f0;
+      --muted:     #8892a4;
+      --green:     #00d97e;
+      --red:       #e63946;
+      --yellow:    #f4c542;
+      --blue:      #4a90e2;
+      --purple:    #9b59b6;
+      --orange:    #f39c12;
+      --teal:      #1abc9c;
+      --simmer:    #8b5cf6;
+      --robinhood: #00c805;
+      --kalshi:    #3b82f6;
+      --coinbase:  #f97316;
+      --alpaca:    #14b8a6;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .nav-logo span { color: var(--green); }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .pnl-badge {
+      font-size: 15px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(0,217,126,0.12);
+      color: var(--green);
+    }
+    .pnl-badge.negative {
+      background: rgba(230,57,70,0.12);
+      color: var(--red);
+    }
+    .venue-dots { display: flex; gap: 8px; align-items: center; }
+    .venue-dot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.error  { background: var(--red); }
+    .dot.warn   { background: var(--yellow); }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      background: var(--card);
+    }
+    .tab {
+      padding: 14px 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all .15s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--text); border-color: var(--green); }
+
+    /* ── MAIN ── */
+    main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.red   { color: var(--red); }
+    .stat-value.blue  { color: var(--blue); }
+
+    /* ── POSITIONS GRID ── */
+    .positions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .position-card {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .position-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .position-ticker {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .position-question {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .position-pnl {
+      text-align: right;
+    }
+    .position-pnl .amount {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .position-pnl .pct {
+      font-size: 11px;
+    }
+    .position-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .position-row span:last-child { color: var(--text); }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-bullish  { background: rgba(0,217,126,0.15); color: var(--green); }
+    .badge-bearish  { background: rgba(230,57,70,0.15); color: var(--red); }
+    .badge-yes      { background: rgba(0,217,126,0.15); color: var(--green); }
+    .badge-no       { background: rgba(230,57,70,0.15); color: var(--red); }
+    .badge-call     { background: rgba(74,144,226,0.15); color: var(--blue); }
+    .badge-put      { background: rgba(230,57,70,0.15); color: var(--red); }
+    .badge-filled   { background: rgba(0,217,126,0.15); color: var(--green); }
+    .badge-pending  { background: rgba(244,197,66,0.15); color: var(--yellow); }
+    .badge-failed   { background: rgba(230,57,70,0.15); color: var(--red); }
+
+    .venue-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .vb-simmer    { background: rgba(139,92,246,0.2); color: var(--simmer); }
+    .vb-robinhood { background: rgba(0,200,5,0.15);   color: var(--robinhood); }
+    .vb-kalshi    { background: rgba(59,130,246,0.2); color: var(--kalshi); }
+    .vb-coinbase  { background: rgba(249,115,22,0.2); color: var(--coinbase); }
+    .vb-alpaca    { background: rgba(20,184,166,0.2); color: var(--alpaca); }
+    .vb-default   { background: rgba(226,232,240,0.1); color: var(--muted); }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(46,52,80,0.5);
+      font-size: 13px;
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .ts { color: var(--muted); font-size: 11px; }
+
+    /* ── TRADE FORM ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    input, select {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px 14px;
+      font-size: 14px;
+      width: 100%;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--green);
+    }
+    input[type="range"] {
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      accent-color: var(--green);
+    }
+    .range-row { display: flex; align-items: center; gap: 12px; }
+    .range-val {
+      font-weight: 700;
+      font-size: 15px;
+      min-width: 50px;
+      text-align: right;
+    }
+
+    .direction-toggle {
+      display: flex;
+      gap: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .dir-btn {
+      flex: 1;
+      padding: 10px;
+      cursor: pointer;
+      background: var(--card2);
+      color: var(--muted);
+      border: none;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all .15s;
+    }
+    .dir-btn.bullish.active {
+      background: rgba(0,217,126,0.2);
+      color: var(--green);
+    }
+    .dir-btn.bearish.active {
+      background: rgba(230,57,70,0.2);
+      color: var(--red);
+    }
+
+    .btn-execute {
+      width: 100%;
+      padding: 14px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity .15s;
+    }
+    .btn-execute:hover { opacity: 0.9; }
+    .btn-execute:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── RESULT BOX ── */
+    .result-box {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: none;
+    }
+    .result-box.success {
+      display: block;
+      background: rgba(0,217,126,0.1);
+      border: 1px solid rgba(0,217,126,0.3);
+      color: var(--green);
+    }
+    .result-box.fail {
+      display: block;
+      background: rgba(230,57,70,0.1);
+      border: 1px solid rgba(230,57,70,0.3);
+      color: var(--red);
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 48px 24px;
+      font-size: 14px;
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* ── UNCONFIGURED ── */
+    .unconfigured-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .unc-chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all .25s;
+      pointer-events: none;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #toast.success { background: rgba(0,217,126,0.95); color: #000; }
+    #toast.fail    { background: rgba(230,57,70,0.95);  color: #fff; }
+
+    .refresh-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      display: inline-block;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">TradeMesh <span>🔌</span></div>
+  <div class="nav-right">
+    <div class="venue-dots" id="venueDots"></div>
+    <div class="pnl-badge" id="navPnl">$0.00 P&amp;L</div>
+  </div>
+</nav>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('positions')">📊 Positions</div>
+  <div class="tab" onclick="switchTab('history')">📋 History</div>
+  <div class="tab" onclick="switchTab('trade')">⚡ Execute Trade</div>
+  <div class="tab" onclick="switchTab('venues')" style="margin-left:auto">🔌 Venues</div>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <!-- POSITIONS PANEL -->
+  <div id="panel-positions" class="panel active">
+    <div class="stats-row" id="statsRow">
+      <div class="stat"><div class="stat-label">Total P&amp;L</div><div class="stat-value green" id="statPnl">—</div></div>
+      <div class="stat"><div class="stat-label">Positions</div><div class="stat-value blue" id="statPos">—</div></div>
+      <div class="stat"><div class="stat-label">Cost Basis</div><div class="stat-value" id="statCost">—</div></div>
+      <div class="stat"><div class="stat-label">Current Value</div><div class="stat-value" id="statVal">—</div></div>
+      <div class="stat"><div class="stat-label">Win Rate</div><div class="stat-value" id="statWin">—</div></div>
+    </div>
+    <div class="positions-grid" id="positionsGrid">
+      <div class="empty"><div class="empty-icon">📭</div>Loading positions…</div>
+    </div>
+  </div>
+
+  <!-- HISTORY PANEL -->
+  <div id="panel-history" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Trade History</div>
+        <div style="color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px">
+          <span class="refresh-dot"></span> live
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Ticker</th>
+              <th>Direction</th>
+              <th>Amount</th>
+              <th>Score</th>
+              <th>Venue</th>
+              <th>Status</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="8" class="empty">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE PANEL -->
+  <div id="panel-trade" class="panel">
+    <div class="card" style="max-width:560px">
+      <div class="card-header">
+        <div class="card-title">Execute Trade</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Ticker</label>
+            <input id="fTicker" type="text" placeholder="BTC, AAPL, FED…" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>Venue</label>
+            <select id="fVenue">
+              <option value="auto">Auto (best match)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Direction</label>
+          <div class="direction-toggle">
+            <button class="dir-btn bullish active" id="btnBullish" onclick="setDir('bullish')">📈 Bullish</button>
+            <button class="dir-btn bearish" id="btnBearish" onclick="setDir('bearish')">📉 Bearish</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Amount (USD)</label>
+          <div class="range-row">
+            <input type="range" id="fAmount" min="1" max="500" value="25" step="1"
+              oninput="document.getElementById('fAmountVal').textContent='$'+this.value" />
+            <div class="range-val" id="fAmountVal">$25</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Score (confidence 0–10)</label>
+          <div class="range-row">
+            <input type="range" id="fScore" min="0" max="10" value="7" step="0.5"
+              oninput="document.getElementById('fScoreVal').textContent=this.value" />
+            <div class="range-val" id="fScoreVal">7</div>
+          </div>
+        </div>
+
+        <button class="btn-execute" id="btnExecute" onclick="executeTrade()">⚡ Execute Trade</button>
+        <div class="result-box" id="tradeResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENUES PANEL -->
+  <div id="panel-venues" class="panel">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Registered Adapters</div></div>
+      <div id="venueList">Loading…</div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+  let direction = 'bullish';
+  let venues = [];
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t,i) => {
+      t.classList.toggle('active', t.textContent.toLowerCase().includes(name) || 
+        (name==='venues' && t.textContent.includes('Venues')));
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-'+name).classList.add('active');
+    if (name === 'positions') loadPositions();
+    if (name === 'history')   loadHistory();
+    if (name === 'venues')    loadVenues();
+  }
+
+  // Fix tab click — simpler approach
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // ── Direction toggle ──────────────────────────────────────────────────────
+  function setDir(d) {
+    direction = d;
+    document.getElementById('btnBullish').classList.toggle('active', d==='bullish');
+    document.getElementById('btnBearish').classList.toggle('active', d==='bearish');
+  }
+
+  // ── Venue badge HTML ──────────────────────────────────────────────────────
+  function venueBadge(name) {
+    const cls = ['simmer','robinhood','kalshi','coinbase','alpaca'].includes(name)
+      ? 'vb-'+name : 'vb-default';
+    return `<span class="venue-badge ${cls}">${name}</span>`;
+  }
+
+  function dirBadge(d) {
+    return `<span class="badge badge-${d}">${d}</span>`;
+  }
+
+  function statusBadge(s, err) {
+    if (!s || s==='error' || err) return `<span class="badge badge-failed">failed</span>`;
+    if (s==='filled') return `<span class="badge badge-filled">filled</span>`;
+    if (s==='pending') return `<span class="badge badge-pending">pending</span>`;
+    return `<span class="badge badge-pending">${s}</span>`;
+  }
+
+  // ── Load status (nav) ─────────────────────────────────────────────────────
+  async function loadStatus() {
+    try {
+      const r = await fetch('/api/status');
+      const j = await r.json();
+      if (!j.success) return;
+      const d = j.data;
+
+      // Nav P&L
+      const pnl = d.pnl?.total_pnl ?? 0;
+      const badge = document.getElementById('navPnl');
+      badge.textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2) + ' P&L';
+      badge.className = 'pnl-badge' + (pnl < 0 ? ' negative' : '');
+
+      // Venue dots
+      venues = d.venues || [];
+      const dotsEl = document.getElementById('venueDots');
+      dotsEl.innerHTML = venues.map(v =>
+        `<div class="venue-dot"><div class="dot active"></div>${v}</div>`
+      ).join('');
+      if (d.unconfigured?.length) {
+        dotsEl.innerHTML += d.unconfigured.map(u =>
+          `<div class="venue-dot"><div class="dot warn" title="${u.reason}"></div>${u.name}</div>`
+        ).join('');
+      }
+
+      // Stats
+      const p = d.pnl;
+      document.getElementById('statPnl').textContent  = (p.total_pnl >= 0 ? '+' : '') + '$' + (p.total_pnl||0).toFixed(2);
+      document.getElementById('statPnl').className    = 'stat-value ' + (p.total_pnl >= 0 ? 'green' : 'red');
+      document.getElementById('statPos').textContent  = p.positions ?? 0;
+      document.getElementById('statCost').textContent = '$' + (p.cost_basis||0).toFixed(2);
+      document.getElementById('statVal').textContent  = '$' + (p.current_value||0).toFixed(2);
+      document.getElementById('statWin').textContent  = p.win_rate != null ? (p.win_rate*100).toFixed(0)+'%' : '—';
+
+      // Populate venue select
+      const sel = document.getElementById('fVenue');
+      sel.innerHTML = '<option value="auto">Auto (best match)</option>' +
+        venues.map(v => `<option value="${v}">${v}</option>`).join('');
+
+    } catch(e) {}
+  }
+
+  // ── Load positions ─────────────────────────────────────────────────────────
+  async function loadPositions() {
+    try {
+      const r = await fetch('/api/positions');
+      const j = await r.json();
+      const grid = document.getElementById('positionsGrid');
+      if (!j.success || !j.data?.length) {
+        grid.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>No open positions.<br><small style="color:var(--muted)">Execute a trade to see it here.</small></div>`;
+        return;
+      }
+      grid.innerHTML = j.data.map(p => {
+        const pnlClass = p.pnl >= 0 ? 'green' : 'red';
+        const pnlSign  = p.pnl >= 0 ? '+' : '';
+        return `
+          <div class="position-card">
+            <div class="position-header">
+              <div>
+                <div class="position-ticker">${p.ticker}</div>
+                ${p.question ? `<div class="position-question" title="${p.question}">${p.question}</div>` : ''}
+              </div>
+              <div class="position-pnl">
+                <div class="amount" style="color:var(--${pnlClass})">${pnlSign}$${p.pnl.toFixed(2)}</div>
+                <div class="pct" style="color:var(--${pnlClass})">${pnlSign}${p.pnl_pct.toFixed(1)}%</div>
+              </div>
+            </div>
+            <div class="position-row"><span>Venue</span><span>${venueBadge(p.venue)}</span></div>
+            <div class="position-row"><span>Side</span><span>${dirBadge(p.side)}</span></div>
+            <div class="position-row"><span>Cost</span><span>$${p.cost_basis.toFixed(2)}</span></div>
+            <div class="position-row"><span>Value</span><span>$${p.current_value.toFixed(2)}</span></div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      document.getElementById('positionsGrid').innerHTML = `<div class="empty">Error loading positions.</div>`;
+    }
+  }
+
+  // ── Load history ──────────────────────────────────────────────────────────
+  async function loadHistory() {
+    try {
+      const r = await fetch('/api/history');
+      const j = await r.json();
+      const tbody = document.getElementById('historyBody');
+      if (!j.success || !j.data?.length) {
+        tbody.innerHTML = `<tr><td colspan="8"><div class="empty" style="padding:32px">No trades yet.</div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = j.data.map(t => {
+        const ts = t.ts ? new Date(t.ts+'Z').toLocaleString() : '—';
+        return `<tr>
+          <td class="ts">${ts}</td>
+          <td><strong>${t.ticker||'—'}</strong></td>
+          <td>${dirBadge(t.direction||'—')}</td>
+          <td>$${(t.amount||0).toFixed(2)}</td>
+          <td>${t.score ?? '—'}</td>
+          <td>${venueBadge(t.venue||'—')}</td>
+          <td>${statusBadge(t.status, t.error)}</td>
+          <td style="color:var(--muted);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.error||''}</td>
+        </tr>`;
+      }).join('');
+    } catch(e) {}
+  }
+
+  // ── Load venues ───────────────────────────────────────────────────────────
+  async function loadVenues() {
+    try {
+      const r = await fetch('/api/venues');
+      const j = await r.json();
+      const el = document.getElementById('venueList');
+      if (!j.success) { el.innerHTML = 'Error loading venues.'; return; }
+      const d = j.data;
+
+      let html = '';
+      if (d.active?.length) {
+        html += '<div style="margin-bottom:20px">';
+        html += '<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">✅ Active</div>';
+        html += d.active.map(v => `
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div class="dot active"></div>
+            ${venueBadge(v)}
+            <span style="color:var(--green);font-size:12px">connected</span>
+          </div>`).join('');
+        html += '</div>';
+      }
+      if (d.unconfigured?.length) {
+        html += '<div>';
+        html += '<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">⚠️ Unconfigured</div>';
+        html += d.unconfigured.map(u => `
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div class="dot warn"></div>
+            ${venueBadge(u.name)}
+            <span style="color:var(--muted);font-size:12px">${u.reason}</span>
+          </div>`).join('');
+        html += '</div>';
+      }
+      if (!d.active?.length && !d.unconfigured?.length) {
+        html = '<div class="empty">No adapters found.</div>';
+      }
+      el.innerHTML = html;
+    } catch(e) {}
+  }
+
+  // ── Execute trade ─────────────────────────────────────────────────────────
+  async function executeTrade() {
+    const ticker = document.getElementById('fTicker').value.trim().toUpperCase();
+    if (!ticker) { toast('Enter a ticker first!', false); return; }
+
+    const btn = document.getElementById('btnExecute');
+    btn.disabled = true;
+    btn.textContent = '⏳ Executing…';
+
+    const body = {
+      ticker,
+      direction,
+      amount: parseFloat(document.getElementById('fAmount').value),
+      score: parseFloat(document.getElementById('fScore').value),
+      venue: document.getElementById('fVenue').value,
+    };
+
+    try {
+      const r = await fetch('/api/trade', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body),
+      });
+      const j = await r.json();
+      const resultBox = document.getElementById('tradeResult');
+
+      if (j.success && j.data?.success) {
+        resultBox.className = 'result-box success';
+        resultBox.innerHTML = `✅ <strong>${j.data.message || 'Trade executed!'}</strong><br>
+          <small>Order ID: ${j.data.order_id || 'n/a'} · Status: ${j.data.status || '—'}</small>`;
+        toast('Trade executed! ✅', true);
+        setTimeout(() => { loadStatus(); loadHistory(); }, 1000);
+      } else {
+        const errMsg = j.data?.error || j.error || 'Unknown error';
+        resultBox.className = 'result-box fail';
+        resultBox.innerHTML = `❌ <strong>Failed:</strong> ${errMsg}`;
+        toast('Trade failed: ' + errMsg, false);
+      }
+    } catch(e) {
+      toast('Request failed: ' + e.message, false);
+    }
+
+    btn.disabled = false;
+    btn.textContent = '⚡ Execute Trade';
+  }
+
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  function toast(msg, success) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show ' + (success ? 'success' : 'fail');
+    setTimeout(() => { el.className = ''; }, 3500);
+  }
+
+  // ── Init + auto-refresh ───────────────────────────────────────────────────
+  loadStatus();
+  loadPositions();
+  setInterval(() => {
+    loadStatus();
+    const activePanel = document.querySelector('.panel.active')?.id;
+    if (activePanel === 'panel-positions') loadPositions();
+    if (activePanel === 'panel-history')   loadHistory();
+  }, 30000);
+</script>
+</body>
+</html>

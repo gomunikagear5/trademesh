@@ -19,6 +19,23 @@ tm.trade(ticker="FED", direction="bearish", amount=25, venue="kalshi")
 tm.trade(market_id="abc123", side="no", amount=25, venue="simmer")
 ```
 
+## 🖥️ Dashboard
+
+```bash
+bash dashboard/start.sh
+```
+
+Open **http://localhost:8765** — live positions, P&L, trade history, and a manual trade panel.
+
+Set env vars for whichever brokers you want active:
+- `ROBINHOOD_USERNAME` + `ROBINHOOD_PASSWORD` → Robinhood
+- `KALSHI_API_KEY` + `KALSHI_PRIVATE_KEY_PATH` → Kalshi
+- `COINBASE_API_KEY_NAME` + `COINBASE_PRIVATE_KEY` → Coinbase
+- `SIMMER_API_KEY` → Simmer / Polymarket
+- `ALPACA_API_KEY` → Alpaca
+
+Adapters with missing credentials show as ⚠️ Unconfigured — no crash.
+
 ## ⚡ Quick Install
 
 ```bash
